@@ -1,0 +1,2 @@
+OPENAI_API_KEY= # Input your Open AI API keys
+WORKSPACE_DIR="/Users/moiseigeno/Documents/agent_workspace" # Input location of the workspace
