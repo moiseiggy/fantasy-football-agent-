@@ -1,0 +1,67 @@
+import os
+import pandas as pd
+from swarms import Agent, OpenAIChat
+from swarms.prompts.agent_system_prompts import AGENT_SYSTEM_PROMPT_3 as SYSTEM_PROMPT
+
+# Get the OpenAI API key from the environment variable
+api_key = os.getenv("OPENAI_API_KEY") 
+
+# Create an instance of the OpenAIChat class
+model = OpenAIChat(
+    api_key=[INSERT OPENAI API KEY], model_name="gpt-4o-mini", temperature=0.1
+)
+
+# Initialize the agent
+agent = Agent(
+    agent_name="Fantasy-Football-Analyst",
+    system_prompt=SYSTEM_PROMPT,
+    llm=model,
+    max_loops=1,
+    autosave=True,
+    dashboard=False,
+    verbose=True,
+    dynamic_temperature_enabled=True,
+    saved_state_path="fantasy_football_agent.json",
+    user_name="fantasy_football_corp",
+    retry_attempts=1,
+    context_length=200000,
+    return_step_meta=False
+)
+
+# Read the weekly CSV file
+csv_file_path = '/Users/moiseigeno/Documents/text files/fantasy_football_stats_week_X.csv'  # Update with your CSV file path
+df = pd.read_csv(csv_file_path)
+
+# Analyze the team performance and generate insights
+team_performance_summary = df.groupby('Player Name').agg({
+     'Total Fantasy Points': 'sum',       # Aggregating total fantasy points
+    'Passing Yards': 'sum',              # Summing passing yards
+    'Passing TDs': 'sum',                # Summing passing touchdowns
+    'Rushing Yards': 'sum',              # Summing rushing yards
+    'Receiving Yards': 'sum',            # Summing receiving yards
+    'Rushing Carries': 'sum',            # Summing rushing carries
+    'Receiving Receptions': 'sum',       # Summing receiving receptions
+})
+
+# Generate recommendations based on performance
+def generate_report():
+    team_summary_text = team_performance_summary.to_string()
+
+    prompt = f"""
+    Based on the following team performance data:
+    
+    {team_summary_text}
+    
+    Please provide a detailed weekly report summarizing the team's performance and suggest roster changes for the upcoming week. Consider player injuries and performance fluctuations.
+    """
+    
+    # Pass the data to the agent for analysis
+    out = agent.run(prompt)
+    return out
+
+# Generate the report
+report = generate_report()
+
+# Output the report
+print("Fantasy Football Weekly Report:\n")
+print(report)
